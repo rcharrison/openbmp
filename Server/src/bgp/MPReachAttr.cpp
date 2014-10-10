@@ -115,7 +115,7 @@ void MPReachAttr::parseReachNlriAttr(int attr_len, u_char *data, bgp_msg::Update
             LOG_INFO("Unexpected next hop length: %d, skipping.", nlri.nh_len);
             break;
     }
-    LOG_INFO("%s", parsed_data.attrs[ATTR_TYPE_NEXT_HOP].c_str());
+    //LOG_INFO("%s", parsed_data.attrs[ATTR_TYPE_NEXT_HOP].c_str());
 
     attr_len -= nlri.nh_len;
       
@@ -203,8 +203,10 @@ void MPReachAttr::parsePrefix(uint16_t afi, uint8_t safi, unsigned char *data, u
     struct in_addr v4;
     struct in6_addr v6;
 
+    /*
     LOG_INFO("%s: afi=%" PRIu16 ",safi=%" PRIu8 ",prefix_len=%" PRIu8 ",prefix_bytes=%" PRIu8,
         peer_addr.c_str(), afi, safi, prefix_len, prefix_bytes);
+    */
 
     switch (afi) {
         case 1:
@@ -221,11 +223,10 @@ void MPReachAttr::parsePrefix(uint16_t afi, uint8_t safi, unsigned char *data, u
                     bzero(&v4.s_addr, sizeof(v4.s_addr));
                     memcpy(&v4.s_addr, data, prefix_bytes); data += prefix_bytes;
                     inet_ntop(AF_INET, &v4.s_addr, addr_buf, sizeof(addr_buf));
-                    snprintf(prefix_buf, sizeof(prefix_buf) - 1, "%s:%s/%" PRIu8, rd_buf, addr_buf, prefix_len); 
+                    snprintf(prefix_buf, sizeof(prefix_buf) - 1, "%s:%s", rd_buf, addr_buf); 
                     prefix.len = prefix_len;
                     prefix.prefix.assign(prefix_buf);
                     parsed_data.advertised.push_back(prefix); 
-                    //LOG_INFO("%s", prefix_buf);
                     break;
                 //case 129:
                 default:
@@ -236,7 +237,7 @@ void MPReachAttr::parsePrefix(uint16_t afi, uint8_t safi, unsigned char *data, u
         case 2:
             switch (safi) {
                 case 4: // skip label, fallthrough (for now ... need to actually check label stack)
-                    data += 3;
+                    data += 3; prefix_len -= 24;
                 case 1:
                     prefix.type = bgp::PREFIX_UNICAST_V6;
                     bzero(&v6.s6_addr, sizeof(v6.s6_addr));
