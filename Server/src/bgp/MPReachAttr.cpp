@@ -211,49 +211,83 @@ void MPReachAttr::parsePrefix(uint16_t afi, uint8_t safi, unsigned char *data, u
     switch (afi) {
         case 1:
             switch (safi) {
-                //case 1:
-                //case 2:
-                //case 4:
+                case 1:
+                    prefix.type = bgp::PREFIX_UNICAST_V4;
+                    break;
+                case 2:
+                    prefix.type = bgp::PREFIX_MULTICAST_V4;
+                    break;
+                case 4:
+                    prefix.type = bgp::PREFIX_LABELED_UNICAST_V4;
+                    data += 3; prefix_bytes -= 3; prefix_len -= 24; // TODO build label stack method
+                    break;
                 case 128: // L3VPN
                     // Assume a single label for now - not safe but usually works, don't store it yet
-                    prefix.type = bgp::PREFIX_VPN_V4;
+                    prefix.type = bgp::PREFIX_UNICAST_VPNV4;
                     data += 3; prefix_bytes -= 3; prefix_len -= 24;
                     formatRD(data, rd_buf, sizeof(rd_buf));
                     data += 8; prefix_bytes -= 8; prefix_len -= 64;
-                    bzero(&v4.s_addr, sizeof(v4.s_addr));
-                    memcpy(&v4.s_addr, data, prefix_bytes); data += prefix_bytes;
-                    inet_ntop(AF_INET, &v4.s_addr, addr_buf, sizeof(addr_buf));
-                    snprintf(prefix_buf, sizeof(prefix_buf) - 1, "%s:%s", rd_buf, addr_buf); 
-                    prefix.len = prefix_len;
-                    prefix.prefix.assign(prefix_buf);
-                    parsed_data.advertised.push_back(prefix); 
+                    prefix.prefix.append(rd_buf);
+                    prefix.prefix.append(":");
                     break;
-                //case 129:
+                case 129:
+                    prefix.type = bgp::PREFIX_MULTICAST_VPNV4;
+                    // Assume a single label for now - not safe but usually works, don't store it yet
+                    data += 3; prefix_bytes -= 3; prefix_len -= 24;
+                    formatRD(data, rd_buf, sizeof(rd_buf));
+                    data += 8; prefix_bytes -= 8; prefix_len -= 64;
+                    prefix.prefix.append(rd_buf);
+                    prefix.prefix.append(":");
+                    break;
                 default:
                     LOG_INFO("%s: AFI=%d, SAFI=%d not implemented yet, skipping", peer_addr.c_str(), afi, safi);
-                    break;
+                    return;
             }
+            bzero(&v4.s_addr, sizeof(v4.s_addr));
+            memcpy(&v4.s_addr, data, prefix_bytes); data += prefix_bytes;
+            inet_ntop(AF_INET, &v4.s_addr, addr_buf, sizeof(addr_buf));
+            prefix.len = prefix_len;
+            prefix.prefix.append(addr_buf);
+            parsed_data.advertised.push_back(prefix); 
             break;
         case 2:
             switch (safi) {
-                case 4: // skip label, fallthrough (for now ... need to actually check label stack)
-                    data += 3; prefix_len -= 24;
                 case 1:
                     prefix.type = bgp::PREFIX_UNICAST_V6;
-                    bzero(&v6.s6_addr, sizeof(v6.s6_addr));
-                    memcpy(&v6.s6_addr, data, prefix_bytes);
-                    inet_ntop(AF_INET6, &v6.s6_addr, addr_buf, sizeof(addr_buf));
-                    prefix.len  = prefix_len;
-                    prefix.prefix.assign(addr_buf);
-                    parsed_data.advertised.push_back(prefix);
                     break;
                 case 2:
+                    prefix.type = bgp::PREFIX_MULTICAST_V6;
+                    break;
+                case 4:
+                    prefix.type = bgp::PREFIX_LABELED_UNICAST_V6;
+                    data += 3; prefix_bytes -= 3; prefix_len -= 24;
+                    break;
                 case 128:
+                    prefix.type = bgp::PREFIX_UNICAST_VPNV6;
+                    data += 3; prefix_bytes -= 3; prefix_len -= 24;
+                    formatRD(data, rd_buf, sizeof(rd_buf));
+                    data += 8; prefix_bytes -= 8; prefix_len -= 64;
+                    prefix.prefix.append(rd_buf);
+                    prefix.prefix.append(":");
+                    break;
                 case 129:
+                    prefix.type = bgp::PREFIX_MULTICAST_VPNV6;
+                    data += 3; prefix_bytes -= 3; prefix_len -= 24;
+                    formatRD(data, rd_buf, sizeof(rd_buf));
+                    data += 8; prefix_bytes -= 8; prefix_len -= 64;
+                    prefix.prefix.append(rd_buf);
+                    prefix.prefix.append(":");
+                    break;
                 default:
                     LOG_INFO("%s: AFI=%d, SAFI=%d not implemented yet, skipping", peer_addr.c_str(), afi, safi);
-                    break;
+                    return;
             }
+            bzero(&v6.s6_addr, sizeof(v6.s6_addr));
+            memcpy(&v6.s6_addr, data, prefix_bytes);
+            inet_ntop(AF_INET6, &v6.s6_addr, addr_buf, sizeof(addr_buf));
+            prefix.len  = prefix_len;
+            prefix.prefix.append(addr_buf);
+            parsed_data.advertised.push_back(prefix);
             break;
         case 25:
             switch (safi) {

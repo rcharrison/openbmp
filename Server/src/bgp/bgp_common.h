@@ -100,9 +100,14 @@ namespace bgp {
     enum PREFIX_TYPE {
                 PREFIX_UNICAST_V4=1,
                 PREFIX_UNICAST_V6,
-                PREFIX_VPN_V4,
-                PREFIX_VPN_v6,
+                PREFIX_UNICAST_VPNV4,
+                PREFIX_UNICAST_VPNV6,
                 PREFIX_MULTICAST_V4,
+                PREFIX_MULTICAST_V6,
+                PREFIX_MULTICAST_VPNV4,
+                PREFIX_MULTICAST_VPNV6,
+                PREFIX_LABELED_UNICAST_V4,
+                PREFIX_LABELED_UNICAST_V6
                 // Add BGP-LS types
     };
 
