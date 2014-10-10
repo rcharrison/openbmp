@@ -218,7 +218,7 @@ void MPReachAttr::parsePrefix(uint16_t afi, uint8_t safi, unsigned char *data, u
                     // Assume a single label for now - not safe but usually works, don't store it yet
                     prefix.type = bgp::PREFIX_VPN_V4;
                     data += 3; prefix_bytes -= 3; prefix_len -= 24;
-                    formatRD(data, rd_buf, sizeof(rd_buf)); // formatRD advances data pointer!
+                    formatRD(data, rd_buf, sizeof(rd_buf));
                     data += 8; prefix_bytes -= 8; prefix_len -= 64;
                     bzero(&v4.s_addr, sizeof(v4.s_addr));
                     memcpy(&v4.s_addr, data, prefix_bytes); data += prefix_bytes;
