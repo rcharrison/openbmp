@@ -94,6 +94,9 @@ private:
      * \param [out]  parsed_data    Reference to parsed_update_data; will be updated with all parsed data
      */
     void parseAfi(mp_reach_nlri &nlri, UpdateMsg::parsed_update_data &parsed_data);
+ 
+    void formatRD(unsigned char *data, char *buf, size_t len);
+    void parsePrefix(uint16_t, uint8_t, unsigned char *, uint8_t, uint8_t, UpdateMsg::parsed_update_data&);
 
     /**
      * MP Reach NLRI parse for BGP_AFI_IPV6 (unicast ipv6)
