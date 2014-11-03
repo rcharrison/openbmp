@@ -46,6 +46,7 @@ ExtCommunity::~ExtCommunity() {
 
 void ExtCommunity::parseExtCommunities(int attr_len, u_char *data, bgp_msg::UpdateMsg::parsed_update_data &parsed_data) {
     std::string decodeStr = "";
+    std::string type_string;
     char ipv4_char[16];
     uint64_t val64bit = 0;
     struct ext_comm ec;
@@ -55,8 +56,9 @@ void ExtCommunity::parseExtCommunities(int attr_len, u_char *data, bgp_msg::Upda
             decodeStr.append(" ");
 
         memcpy((void *)&ec, data+i, 8);
+        type_string = tdict.find(ec.type)->second.find(ec.subtype)->second;
         
-        decodeStr.append((tdict.find(ec.type)->second).find(ec.subtype)->second);
+        decodeStr.append((type_string.empty() ? "opaque" : type_string));
         decodeStr.append(":");
         if (ec.type == 0x00 || ec.type == 0x40) {
             bgp::SWAP_BYTES(&ec.data.ext_as.as);
@@ -101,13 +103,15 @@ void ExtCommunity::parsev6ExtCommunities(int attr_len, u_char *data, bgp_msg::Up
     std::string decodeStr = "";
     char ipv6_char[40];
     struct v6ext_comm ec6;
+    std::string type_string;
 
     for (int i=0; i < attr_len; i += 20) {
         if (i)
             decodeStr.append(" ");
 
         memcpy((void *)&ec6, data+i, 20);
-        decodeStr.append((tdict6.find(ec6.type)->second).find(ec6.subtype)->second);
+        type_string = tdict6.find(ec6.type)->second.find(ec6.subtype)->second;
+        decodeStr.append((type_string.empty() ? "opaque" : type_string));
         decodeStr.append(":");
 
         bgp::SWAP_BYTES(&ec6.addr);
